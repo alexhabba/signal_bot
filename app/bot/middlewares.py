@@ -3,6 +3,7 @@ from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, User as TgUser
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.db.models import User
@@ -36,5 +37,14 @@ async def upsert_user(session: AsyncSession, tg_user: TgUser) -> User:
     user.username = tg_user.username
     user.full_name = tg_user.full_name
     user.language = tg_user.language_code
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        # Two updates from a new user were handled at once and the other one inserted the row first.
+        await session.rollback()
+        user = await session.get(User, tg_user.id)
+        user.username = tg_user.username
+        user.full_name = tg_user.full_name
+        user.language = tg_user.language_code
+        await session.commit()
     return user
