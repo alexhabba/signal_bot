@@ -33,7 +33,7 @@ async def link(message: Message, bot: Bot, session: AsyncSession, settings: Sett
         await message.answer(texts.NO_SUBSCRIPTION)
         return
     if not settings.channel_id:
-        await message.answer(texts.CHANNEL_NOT_CONFIGURED)
+        await message.answer(texts.SIGNALS_IN_CHAT)
         return
     invite = await make_join_link(
         bot, settings.channel_id, message.from_user.id, timedelta(hours=settings.invite_link_ttl_hours)

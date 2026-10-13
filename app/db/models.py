@@ -120,18 +120,14 @@ class Subscription(Base):
 
 
 class Signal(Base):
+    """A signal sent to subscribers' private chats. The text is kept as the admin wrote it."""
+
     __tablename__ = "signals"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    pair: Mapped[str] = mapped_column(String(32))
-    direction: Mapped[str] = mapped_column(String(8))  # long / short
-    entry: Mapped[str] = mapped_column(String(64))
-    targets: Mapped[str] = mapped_column(String(256))
-    stop_loss: Mapped[str] = mapped_column(String(64))
-    leverage: Mapped[str | None] = mapped_column(String(16))
-    comment: Mapped[str | None] = mapped_column(Text)
-    channel_message_id: Mapped[int | None] = mapped_column(BigInteger)
-    result: Mapped[str | None] = mapped_column(String(64))
+    text: Mapped[str] = mapped_column(Text)
+    recipients: Mapped[int] = mapped_column(Integer, default=0)  # delivered
+    failed: Mapped[int] = mapped_column(Integer, default=0)  # blocked the bot or unreachable
     created_by: Mapped[int] = mapped_column(BigInteger)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 

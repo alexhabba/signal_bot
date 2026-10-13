@@ -17,8 +17,11 @@ class Settings(BaseSettings):
     # Telegram user ids allowed to use admin commands; comma-separated in env.
     admin_ids: Annotated[list[int], NoDecode] = Field(default_factory=list)
 
-    # Private channel where signals are published; the bot must be an admin there.
+    # Optional private channel for subscribers; when unset, signals go to subscribers' private chats.
+    # If set, the bot must be an admin there with the right to invite users.
     channel_id: int | None = None
+    # Optional open channel for free signals; the bot must be an admin there with the right to post.
+    public_channel_id: int | None = None
 
     # Payments. Only the receiving address is stored here, never a private key.
     payment_network: str = "TRC20"

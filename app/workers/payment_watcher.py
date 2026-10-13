@@ -51,13 +51,12 @@ async def notify(bot: Bot, settings: Settings, result: PaymentResult) -> None:
         if result.outcome == Outcome.PAID:
             user_id = result.invoice.user_id
             await bot.send_message(user_id, texts.payment_received(texts.format_date(result.subscription.ends_at)))
+            await bot.send_message(user_id, texts.SIGNALS_IN_CHAT)
             if settings.channel_id:
                 link = await make_join_link(
                     bot, settings.channel_id, user_id, timedelta(hours=settings.invite_link_ttl_hours)
                 )
                 await bot.send_message(user_id, texts.join_link(link, settings.invite_link_ttl_hours))
-            else:
-                await bot.send_message(user_id, texts.CHANNEL_NOT_CONFIGURED)
         elif result.outcome == Outcome.UNDERPAID:
             await bot.send_message(result.invoice.user_id, texts.underpaid(result.payment.amount, result.shortfall))
             await _notify_admins(
