@@ -65,8 +65,8 @@ def broadcast_report(delivered: int, failed: int) -> str:
     return text
 
 
-SIGNAL_USAGE = "Формат: /signal <текст сигнала>. Текст получат все подписчики с активной подпиской."
-FREE_USAGE = "Формат: /free <текст>. Он будет опубликован в открытом канале."
+SIGNAL_USAGE = "Формат: /signal &lt;текст сигнала&gt;. Текст получат все подписчики с активной подпиской."
+FREE_USAGE = "Формат: /free &lt;текст&gt;. Он будет опубликован в открытом канале."
 NO_SUBSCRIBERS = "Активных подписчиков пока нет, сигнал никому не отправлен."
 PUBLIC_CHANNEL_NOT_CONFIGURED = "Открытый канал не настроен: укажите PUBLIC_CHANNEL_ID в .env."
 
