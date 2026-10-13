@@ -1,3 +1,4 @@
+from decimal import Decimal
 from functools import lru_cache
 from typing import Annotated
 
@@ -25,6 +26,20 @@ class Settings(BaseSettings):
     invoice_ttl_minutes: int = 60
     # Up to this many cents are added to the plan price so every pending invoice has a unique amount.
     amount_offset_slots: int = 99
+    # A transfer this much below the invoice still counts as paid.
+    underpay_tolerance: Decimal = Decimal("0")
+    # A transfer short by up to this much (same cents) is linked to its invoice as underpaid.
+    underpay_window: Decimal = Decimal("5")
+
+    trongrid_api_key: str = ""
+    poll_interval_seconds: int = 30
+    # How far back to scan on the very first run, before any payment is recorded.
+    scan_lookback_hours: int = 24
+
+    scheduler_interval_seconds: int = 300
+    # Access stays this long after the subscription ends before the user is removed.
+    grace_hours: int = 0
+    invite_link_ttl_hours: int = 24
 
     @field_validator("admin_ids", mode="before")
     @classmethod
