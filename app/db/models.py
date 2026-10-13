@@ -19,17 +19,15 @@ class Base(DeclarativeBase):
 
 class InvoiceStatus(str, enum.Enum):
     PENDING = "pending"  # issued, waiting for a transfer
-    CONFIRMING = "confirming"  # transfer seen, block not final yet
     PAID = "paid"
-    UNDERPAID = "underpaid"
+    UNDERPAID = "underpaid"  # a transfer arrived but short; resolved by an admin
     EXPIRED = "expired"
     CANCELLED = "cancelled"
-    LATE_PAID = "late_paid"  # paid after expiry, needs a decision
     REFUNDED = "refunded"
 
 
 # Statuses whose amount is reserved and must not be reused by a new invoice.
-ACTIVE_INVOICE_STATUSES = (InvoiceStatus.PENDING, InvoiceStatus.CONFIRMING)
+ACTIVE_INVOICE_STATUSES = (InvoiceStatus.PENDING,)
 
 
 class SubscriptionSource(str, enum.Enum):
@@ -95,8 +93,7 @@ class Payment(Base):
     tx_hash: Mapped[str] = mapped_column(String(128))
     from_address: Mapped[str] = mapped_column(String(128))
     amount: Mapped[Decimal] = mapped_column(Amount)
-    block_number: Mapped[int | None] = mapped_column(BigInteger)
-    confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    block_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     invoice_id: Mapped[int | None] = mapped_column(ForeignKey("invoices.id"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -115,6 +112,9 @@ class Subscription(Base):
     )
     invoice_id: Mapped[int | None] = mapped_column(ForeignKey("invoices.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # Reminder and removal bookkeeping, so the scheduler acts on each subscription once.
+    reminded_days: Mapped[int | None] = mapped_column(Integer)
+    access_revoked: Mapped[bool] = mapped_column(Boolean, default=False)
 
     user: Mapped[User] = relationship(back_populates="subscriptions")
 

@@ -2,10 +2,8 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
-from sqlalchemy.ext.asyncio import create_async_engine
 
-from app.db.models import Invoice, InvoiceStatus, Plan, User
-from app.db.session import create_tables, make_sessionmaker
+from app.db.models import Invoice, InvoiceStatus, Plan
 from app.services.invoices import (
     REUSE_COOLDOWN,
     NoFreeAmountError,
@@ -16,19 +14,6 @@ from app.services.invoices import (
 
 NOW = datetime(2026, 10, 13, 12, 0, tzinfo=timezone.utc)
 TTL = timedelta(minutes=60)
-
-
-@pytest.fixture
-async def session():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    await create_tables(engine)
-    async with make_sessionmaker(engine)() as session:
-        session.add_all([User(id=1), User(id=2), User(id=3)])
-        session.add(Plan(id=1, title="1 месяц", days=30, price=Decimal("30")))
-        session.add(Plan(id=2, title="3 месяца", days=90, price=Decimal("80")))
-        await session.commit()
-        yield session
-    await engine.dispose()
 
 
 async def issue(session, user_id, plan_id=1, now=NOW, slots=99):

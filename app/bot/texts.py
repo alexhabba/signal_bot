@@ -44,3 +44,52 @@ def invoice_text(*, plan_title: str, amount: Decimal, network: str, address: str
 
 def subscription_active(ends_at_text: str) -> str:
     return f"Подписка активна до {ends_at_text} (UTC)."
+
+
+def format_date(value) -> str:
+    return value.strftime("%d.%m.%Y %H:%M")
+
+
+def payment_received(ends_at_text: str) -> str:
+    return f"✅ Оплата получена! Подписка активна до {ends_at_text} (UTC)."
+
+
+def join_link(link: str, ttl_hours: int) -> str:
+    return (
+        f"Ваша ссылка в канал с сигналами: {link}\n\n"
+        f"Нажмите «Подать заявку», бот одобрит её автоматически. Ссылка действует {ttl_hours} ч, "
+        f"новую можно получить командой /link."
+    )
+
+
+def underpaid(received, shortfall) -> str:
+    return (
+        f"⚠️ Получено {format_amount(received)} USDT, это меньше суммы счёта на {format_amount(shortfall)} USDT. "
+        "Скорее всего, биржа вычла комиссию за вывод. Мы уже видим платёж: напишите администратору, "
+        "и он поможет закрыть оплату."
+    )
+
+
+def renewal_reminder(ends_at_text: str) -> str:
+    return f"⏳ Подписка заканчивается {ends_at_text} (UTC). Чтобы продлить, нажмите /start и выберите тариф."
+
+
+SUBSCRIPTION_ENDED = "Подписка закончилась, доступ к каналу закрыт. Чтобы вернуться, нажмите /start."
+
+CHANNEL_NOT_CONFIGURED = "Канал пока не настроен, администратор пришлёт доступ вручную."
+
+
+def admin_unmatched(tx_hash: str, amount, from_address: str) -> str:
+    return (
+        f"❓ Перевод не совпал ни с одним счётом.\n"
+        f"Сумма: {format_amount(amount)} USDT\nОт: {from_address}\nTx: <code>{tx_hash}</code>\n"
+        f"Если это чья-то оплата, выдайте доступ: /grant &lt;user_id&gt; &lt;дней&gt;"
+    )
+
+
+def admin_underpaid(user_id: int, invoice_id: int, received, expected) -> str:
+    return (
+        f"⚠️ Недоплата по счёту #{invoice_id} от пользователя {user_id}: "
+        f"пришло {format_amount(received)} из {format_amount(expected)} USDT.\n"
+        f"Чтобы засчитать: /grant {user_id} &lt;дней&gt;"
+    )
