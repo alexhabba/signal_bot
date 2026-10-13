@@ -54,6 +54,23 @@ def payment_received(ends_at_text: str) -> str:
     return f"✅ Оплата получена! Подписка активна до {ends_at_text} (UTC)."
 
 
+def signal_message(text: str) -> str:
+    return f"📈 Сигнал\n\n{text}"
+
+
+def broadcast_report(delivered: int, failed: int) -> str:
+    text = f"Отправлено подписчикам: {delivered}."
+    if failed:
+        text += f" Не дошло: {failed} (заблокировали бота или недоступны)."
+    return text
+
+
+SIGNAL_USAGE = "Формат: /signal <текст сигнала>. Текст получат все подписчики с активной подпиской."
+FREE_USAGE = "Формат: /free <текст>. Он будет опубликован в открытом канале."
+NO_SUBSCRIBERS = "Активных подписчиков пока нет, сигнал никому не отправлен."
+PUBLIC_CHANNEL_NOT_CONFIGURED = "Открытый канал не настроен: укажите PUBLIC_CHANNEL_ID в .env."
+
+
 def join_link(link: str, ttl_hours: int) -> str:
     return (
         f"Ваша ссылка в канал с сигналами: {link}\n\n"
@@ -76,7 +93,7 @@ def renewal_reminder(ends_at_text: str) -> str:
 
 SUBSCRIPTION_ENDED = "Подписка закончилась, доступ к каналу закрыт. Чтобы вернуться, нажмите /start."
 
-CHANNEL_NOT_CONFIGURED = "Канал пока не настроен, администратор пришлёт доступ вручную."
+SIGNALS_IN_CHAT = "Полные сигналы будут приходить сюда, в этот чат. Не блокируйте бота и не отключайте уведомления."
 
 
 def admin_unmatched(tx_hash: str, amount, from_address: str) -> str:

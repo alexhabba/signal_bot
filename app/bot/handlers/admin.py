@@ -12,6 +12,7 @@ from app.config import Settings
 from app.db.models import AuditLog, Invoice, InvoiceStatus, Payment, Subscription, SubscriptionSource, User
 from app.services.access import make_join_link
 from app.services.payments import activate_subscription
+from app.services.signals import active_subscriber_ids, broadcast_signal
 
 router = Router(name="admin")
 
@@ -67,6 +68,7 @@ async def grant(message: Message, command: CommandObject, bot: Bot, session: Asy
     await message.answer(f"Готово: доступ пользователя {user_id} до {ends_at} (UTC).")
     try:
         await bot.send_message(user_id, texts.payment_received(ends_at))
+        await bot.send_message(user_id, texts.SIGNALS_IN_CHAT)
         if settings.channel_id:
             ttl = timedelta(hours=settings.invite_link_ttl_hours)
             link = await make_join_link(bot, settings.channel_id, user_id, ttl)
@@ -96,3 +98,35 @@ async def unmatched(message: Message, session: AsyncSession) -> None:
         for p in payments
     ]
     await message.answer("\n\n".join(lines))
+
+
+@router.message(Command("signal"))
+async def signal(message: Message, command: CommandObject, bot: Bot, session: AsyncSession) -> None:
+    """/signal <text>: send a full signal to every subscriber with an active subscription."""
+    text = (command.args or "").strip()
+    if not text:
+        await message.answer(texts.SIGNAL_USAGE)
+        return
+    if not await active_subscriber_ids(session):
+        await message.answer(texts.NO_SUBSCRIBERS)
+        return
+    result = await broadcast_signal(bot, session, text=text, created_by=message.from_user.id)
+    await message.answer(texts.broadcast_report(result.recipients, result.failed))
+
+
+@router.message(Command("free"))
+async def free(message: Message, command: CommandObject, bot: Bot, settings: Settings) -> None:
+    """/free <text>: publish a free signal in the open channel."""
+    text = (command.args or "").strip()
+    if not text:
+        await message.answer(texts.FREE_USAGE)
+        return
+    if not settings.public_channel_id:
+        await message.answer(texts.PUBLIC_CHANNEL_NOT_CONFIGURED)
+        return
+    try:
+        await bot.send_message(settings.public_channel_id, text)
+    except TelegramAPIError as exc:
+        await message.answer(f"Не удалось опубликовать в канале: {exc}")
+        return
+    await message.answer("Опубликовано в открытом канале.")
