@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: signal_bot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-signal_bot}
+      POSTGRES_DB: signal_bot
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U signal_bot"]
+      interval: 5s
+      retries: 10
+
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://signal_bot:${POSTGRES_PASSWORD:-signal_bot}@db:5432/signal_bot
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
